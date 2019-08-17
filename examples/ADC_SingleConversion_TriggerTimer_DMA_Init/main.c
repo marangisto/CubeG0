@@ -31,6 +31,11 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 
+extern void aux_main();
+extern void write_probe(uint8_t x);
+extern void write_dac(uint16_t x);
+extern void trace(const char *s, uint32_t x);
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -143,6 +148,8 @@ void     UserButton_Init(void);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
+
+    aux_main();
 
   uint32_t tmp_index_adc_converted_data = 0U;
   
@@ -277,7 +284,7 @@ static void MX_ADC1_Init(void)
   /**ADC1 GPIO Configuration  
   PA4   ------> ADC1_IN4 
   */
-  GPIO_InitStruct.Pin = LL_GPIO_PIN_4;
+  GPIO_InitStruct.Pin = LL_GPIO_PIN_0;
   GPIO_InitStruct.Mode = LL_GPIO_MODE_ANALOG;
   GPIO_InitStruct.Pull = LL_GPIO_PULL_NO;
   LL_GPIO_Init(GPIOA, &GPIO_InitStruct);
@@ -364,12 +371,8 @@ static void MX_ADC1_Init(void)
   LL_ADC_REG_SetTriggerEdge(ADC1, LL_ADC_REG_TRIG_EXT_FALLING);
   /** Configure Regular Channel 
   */
-  LL_ADC_REG_SetSequencerRanks(ADC1, LL_ADC_REG_RANK_1, LL_ADC_CHANNEL_4);
-  LL_ADC_SetChannelSamplingTime(ADC1, LL_ADC_CHANNEL_4, LL_ADC_SAMPLINGTIME_COMMON_1);
-  /** Configure Regular Channel 
-  */
-  LL_ADC_REG_SetSequencerRanks(ADC1, LL_ADC_REG_RANK_1, LL_ADC_CHANNEL_4);
-  LL_ADC_SetChannelSamplingTime(ADC1, LL_ADC_CHANNEL_4, LL_ADC_SAMPLINGTIME_COMMON_1);
+  LL_ADC_REG_SetSequencerRanks(ADC1, LL_ADC_REG_RANK_1, LL_ADC_CHANNEL_0);
+  LL_ADC_SetChannelSamplingTime(ADC1, LL_ADC_CHANNEL_0, LL_ADC_SAMPLINGTIME_COMMON_1);
   /* USER CODE BEGIN ADC1_Init 2 */
 
   /* Enable interruption ADC group regular overrun */
@@ -768,6 +771,7 @@ void AdcDmaTransferComplete_Callback()
     aADCxConvertedData_Voltage_mVolt[tmp_index] = __LL_ADC_CALC_DATA_TO_VOLTAGE(VDDA_APPLI, aADCxConvertedData[tmp_index], LL_ADC_RESOLUTION_12B);
   }
   
+  write_dac(aADCxConvertedData[0]);
   /* Update status variable of DMA transfer */
   ubDmaTransferStatus = 1;
   
@@ -775,6 +779,7 @@ void AdcDmaTransferComplete_Callback()
   /* - Turn-on if DMA transfer is completed */
   /* - Turn-off if DMA transfer is not completed */
   LED_On();
+  write_probe(0);
 
 }
 
@@ -803,6 +808,7 @@ void AdcDmaTransferHalf_Callback()
   /* - Turn-on if DMA transfer is completed */
   /* - Turn-off if DMA transfer is not completed */
   LED_Off();
+  write_probe(1);
 
 }
 
