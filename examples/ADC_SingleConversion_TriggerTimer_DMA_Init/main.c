@@ -35,6 +35,9 @@ extern void aux_main();
 extern void write_probe(uint8_t x);
 extern void write_dac(uint16_t x);
 extern void trace(const char *s, uint32_t x);
+extern void adc_init(volatile uint16_t *dest, uint16_t nelem);
+extern void adc_activate();
+extern void tim_init();
 
 /* USER CODE END Includes */
 
@@ -187,6 +190,7 @@ int main(void)
   MX_GPIO_Init();
   MX_DMA_Init();
   MX_ADC1_Init();
+  tim_init();
   MX_TIM3_Init();
   /* USER CODE BEGIN 2 */
     
@@ -195,6 +199,7 @@ int main(void)
   
   /* Activate ADC */
   /* Perform ADC activation procedure to make it ready to convert. */
+  adc_activate();
   Activate_ADC();
   
 
@@ -272,13 +277,13 @@ static void MX_ADC1_Init(void)
 
   /* USER CODE END ADC1_Init 0 */
 
-  LL_ADC_REG_InitTypeDef ADC_REG_InitStruct = {0};
-  LL_ADC_InitTypeDef ADC_InitStruct = {0};
+  //LL_ADC_REG_InitTypeDef ADC_REG_InitStruct = {0};
+  //LL_ADC_InitTypeDef ADC_InitStruct = {0};
 
   LL_GPIO_InitTypeDef GPIO_InitStruct = {0};
 
   /* Peripheral clock enable */
-  LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_ADC);
+  //LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_ADC);
   
   LL_IOP_GRP1_EnableClock(LL_IOP_GRP1_PERIPH_GPIOA);
   /**ADC1 GPIO Configuration  
@@ -292,63 +297,54 @@ static void MX_ADC1_Init(void)
   /* ADC1 DMA Init */
   
   /* ADC1 Init */
-  LL_DMA_SetPeriphRequest(DMA1, LL_DMA_CHANNEL_1, LL_DMAMUX_REQ_ADC1);
+  adc_init(aADCxConvertedData, ADC_CONVERTED_DATA_BUFFER_SIZE);
 
-  LL_DMA_SetDataTransferDirection(DMA1, LL_DMA_CHANNEL_1, LL_DMA_DIRECTION_PERIPH_TO_MEMORY);
+  //LL_DMA_SetPeriphRequest(DMA1, LL_DMA_CHANNEL_1, LL_DMAMUX_REQ_ADC1);
 
-  LL_DMA_SetChannelPriorityLevel(DMA1, LL_DMA_CHANNEL_1, LL_DMA_PRIORITY_HIGH);
+  //LL_DMA_SetDataTransferDirection(DMA1, LL_DMA_CHANNEL_1, LL_DMA_DIRECTION_PERIPH_TO_MEMORY);
 
-  LL_DMA_SetMode(DMA1, LL_DMA_CHANNEL_1, LL_DMA_MODE_CIRCULAR);
+  //LL_DMA_SetChannelPriorityLevel(DMA1, LL_DMA_CHANNEL_1, LL_DMA_PRIORITY_HIGH);
 
-  LL_DMA_SetPeriphIncMode(DMA1, LL_DMA_CHANNEL_1, LL_DMA_PERIPH_NOINCREMENT);
+  //LL_DMA_SetMode(DMA1, LL_DMA_CHANNEL_1, LL_DMA_MODE_CIRCULAR);
 
-  LL_DMA_SetMemoryIncMode(DMA1, LL_DMA_CHANNEL_1, LL_DMA_MEMORY_INCREMENT);
+  //LL_DMA_SetPeriphIncMode(DMA1, LL_DMA_CHANNEL_1, LL_DMA_PERIPH_NOINCREMENT);
 
-  LL_DMA_SetPeriphSize(DMA1, LL_DMA_CHANNEL_1, LL_DMA_PDATAALIGN_HALFWORD);
+  //LL_DMA_SetMemoryIncMode(DMA1, LL_DMA_CHANNEL_1, LL_DMA_MEMORY_INCREMENT);
 
-  LL_DMA_SetMemorySize(DMA1, LL_DMA_CHANNEL_1, LL_DMA_MDATAALIGN_HALFWORD);
+  //LL_DMA_SetPeriphSize(DMA1, LL_DMA_CHANNEL_1, LL_DMA_PDATAALIGN_HALFWORD);
+
+  //LL_DMA_SetMemorySize(DMA1, LL_DMA_CHANNEL_1, LL_DMA_MDATAALIGN_HALFWORD);
 
   /* USER CODE BEGIN ADC1_Init 1 */
   
   /* Select ADC as DMA transfer request */
-  LL_DMAMUX_SetRequestID(DMAMUX1,
-                         LL_DMAMUX_CHANNEL_0,
-                         LL_DMAMUX_REQ_ADC1);
+  //LL_DMAMUX_SetRequestID(DMAMUX1, LL_DMAMUX_CHANNEL_0, LL_DMAMUX_REQ_ADC1);
   
   /* Set DMA transfer addresses of source and destination */
-  LL_DMA_ConfigAddresses(DMA1,
-                         LL_DMA_CHANNEL_1,
-                         LL_ADC_DMA_GetRegAddr(ADC1, LL_ADC_DMA_REG_REGULAR_DATA),
-                         (uint32_t)&aADCxConvertedData,
-                         LL_DMA_DIRECTION_PERIPH_TO_MEMORY);
+  //LL_DMA_ConfigAddresses(DMA1, LL_DMA_CHANNEL_1, LL_ADC_DMA_GetRegAddr(ADC1, LL_ADC_DMA_REG_REGULAR_DATA), (uint32_t)&aADCxConvertedData, LL_DMA_DIRECTION_PERIPH_TO_MEMORY);
   
   /* Set DMA transfer size */
-  LL_DMA_SetDataLength(DMA1,
-                       LL_DMA_CHANNEL_1,
-                       ADC_CONVERTED_DATA_BUFFER_SIZE);
+  //LL_DMA_SetDataLength(DMA1, LL_DMA_CHANNEL_1, ADC_CONVERTED_DATA_BUFFER_SIZE);
   
   /* Enable DMA transfer interruption: transfer complete */
-  LL_DMA_EnableIT_TC(DMA1,
-                     LL_DMA_CHANNEL_1);
+  //LL_DMA_EnableIT_TC(DMA1, LL_DMA_CHANNEL_1);
   
   /* Enable DMA transfer interruption: half transfer */
-  LL_DMA_EnableIT_HT(DMA1,
-                     LL_DMA_CHANNEL_1);
+  //LL_DMA_EnableIT_HT(DMA1, LL_DMA_CHANNEL_1);
   
   /* Enable DMA transfer interruption: transfer error */
-  LL_DMA_EnableIT_TE(DMA1,
-                     LL_DMA_CHANNEL_1);
+  //LL_DMA_EnableIT_TE(DMA1, LL_DMA_CHANNEL_1);
   
   /*## Activation of DMA #####################################################*/
   /* Enable the DMA transfer */
-  LL_DMA_EnableChannel(DMA1,
-                       LL_DMA_CHANNEL_1);
+  //LL_DMA_EnableChannel(DMA1, LL_DMA_CHANNEL_1);
   /* Configure NVIC to enable ADC1 interruptions */
-  NVIC_SetPriority(ADC1_IRQn, 0);
-  NVIC_EnableIRQ(ADC1_IRQn);
+  //NVIC_SetPriority(ADC1_IRQn, 0);
+  //NVIC_EnableIRQ(ADC1_IRQn);
   /* USER CODE END ADC1_Init 1 */
   /** Configure the global features of the ADC (Clock, Resolution, Data Alignment and number of conversion) 
   */
+  /*
   ADC_REG_InitStruct.TriggerSource = LL_ADC_REG_TRIG_EXT_TIM3_TRGO;
   ADC_REG_InitStruct.SequencerLength = LL_ADC_REG_SEQ_SCAN_DISABLE;
   ADC_REG_InitStruct.SequencerDiscont = LL_ADC_REG_SEQ_DISCONT_DISABLE;
@@ -356,27 +352,30 @@ static void MX_ADC1_Init(void)
   ADC_REG_InitStruct.DMATransfer = LL_ADC_REG_DMA_TRANSFER_UNLIMITED;
   ADC_REG_InitStruct.Overrun = LL_ADC_REG_OVR_DATA_OVERWRITTEN;
   LL_ADC_REG_Init(ADC1, &ADC_REG_InitStruct);
-  LL_ADC_SetOverSamplingScope(ADC1, LL_ADC_OVS_DISABLE);
-  LL_ADC_SetTriggerFrequencyMode(ADC1, LL_ADC_CLOCK_FREQ_MODE_HIGH);
-  LL_ADC_REG_SetSequencerConfigurable(ADC1, LL_ADC_REG_SEQ_CONFIGURABLE);
-  LL_ADC_SetSamplingTimeCommonChannels(ADC1, LL_ADC_SAMPLINGTIME_COMMON_1, LL_ADC_SAMPLINGTIME_39CYCLES_5);
-  LL_ADC_SetSamplingTimeCommonChannels(ADC1, LL_ADC_SAMPLINGTIME_COMMON_2, LL_ADC_SAMPLINGTIME_39CYCLES_5);
-  LL_ADC_DisableIT_EOC(ADC1);
-  LL_ADC_DisableIT_EOS(ADC1);
+  */
+ // LL_ADC_SetOverSamplingScope(ADC1, LL_ADC_OVS_DISABLE);
+  //LL_ADC_SetTriggerFrequencyMode(ADC1, LL_ADC_CLOCK_FREQ_MODE_HIGH);
+  //LL_ADC_REG_SetSequencerConfigurable(ADC1, LL_ADC_REG_SEQ_CONFIGURABLE);
+  //LL_ADC_SetSamplingTimeCommonChannels(ADC1, LL_ADC_SAMPLINGTIME_COMMON_1, LL_ADC_SAMPLINGTIME_39CYCLES_5);
+  //LL_ADC_SetSamplingTimeCommonChannels(ADC1, LL_ADC_SAMPLINGTIME_COMMON_2, LL_ADC_SAMPLINGTIME_39CYCLES_5);
+  //LL_ADC_DisableIT_EOC(ADC1);
+  //LL_ADC_DisableIT_EOS(ADC1);
+  /*
   ADC_InitStruct.Clock = LL_ADC_CLOCK_SYNC_PCLK_DIV4;
   ADC_InitStruct.Resolution = LL_ADC_RESOLUTION_12B;
   ADC_InitStruct.DataAlignment = LL_ADC_DATA_ALIGN_RIGHT;
   ADC_InitStruct.LowPowerMode = LL_ADC_LP_MODE_NONE;
   LL_ADC_Init(ADC1, &ADC_InitStruct);
-  LL_ADC_REG_SetTriggerEdge(ADC1, LL_ADC_REG_TRIG_EXT_FALLING);
+  */
+  //LL_ADC_REG_SetTriggerEdge(ADC1, LL_ADC_REG_TRIG_EXT_FALLING);
   /** Configure Regular Channel 
   */
-  LL_ADC_REG_SetSequencerRanks(ADC1, LL_ADC_REG_RANK_1, LL_ADC_CHANNEL_0);
-  LL_ADC_SetChannelSamplingTime(ADC1, LL_ADC_CHANNEL_0, LL_ADC_SAMPLINGTIME_COMMON_1);
+  //LL_ADC_REG_SetSequencerRanks(ADC1, LL_ADC_REG_RANK_1, LL_ADC_CHANNEL_0);
+  //LL_ADC_SetChannelSamplingTime(ADC1, LL_ADC_CHANNEL_0, LL_ADC_SAMPLINGTIME_COMMON_1);
   /* USER CODE BEGIN ADC1_Init 2 */
 
   /* Enable interruption ADC group regular overrun */
-  LL_ADC_EnableIT_OVR(ADC1);
+  //LL_ADC_EnableIT_OVR(ADC1);
   /* USER CODE END ADC1_Init 2 */
 
 }
@@ -395,10 +394,10 @@ static void MX_TIM3_Init(void)
   uint32_t timer_reload = 0;                      /* Timer reload value in function of timer prescaler to achieve time base period */
   /* USER CODE END TIM3_Init 0 */
 
-  LL_TIM_InitTypeDef TIM_InitStruct = {0};
+ // LL_TIM_InitTypeDef TIM_InitStruct = {0};
 
   /* Peripheral clock enable */
-  LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_TIM3);
+  //LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_TIM3);
 
   /* USER CODE BEGIN TIM3_Init 1 */
   /*## Configuration of NVIC #################################################*/
@@ -418,14 +417,14 @@ static void MX_TIM3_Init(void)
   /* Retrieve timer clock source frequency */
   /* If APB1 prescaler is different of 1, timers have a factor x2 on their    */
   /* clock source.                                                            */
-  if (LL_RCC_GetAPB1Prescaler() == LL_RCC_APB1_DIV_1)
-  {
-    timer_clock_frequency = __LL_RCC_CALC_PCLK1_FREQ(SystemCoreClock, LL_RCC_GetAPB1Prescaler());
-  }
-  else
-  {
-    timer_clock_frequency = (__LL_RCC_CALC_PCLK1_FREQ(SystemCoreClock, LL_RCC_GetAPB1Prescaler()) * 2);
-  }
+  //if (LL_RCC_GetAPB1Prescaler() == LL_RCC_APB1_DIV_1)
+  //{
+    //timer_clock_frequency = __LL_RCC_CALC_PCLK1_FREQ(SystemCoreClock, LL_RCC_GetAPB1Prescaler());
+  //}
+  //else
+  //{
+    //timer_clock_frequency = (__LL_RCC_CALC_PCLK1_FREQ(SystemCoreClock, LL_RCC_GetAPB1Prescaler()) * 2);
+  //}
   
   /* Timer prescaler calculation */
   /* (computation for timer 16 bits, additional + 1 to round the prescaler up) */
@@ -434,23 +433,25 @@ static void MX_TIM3_Init(void)
   timer_reload = (timer_clock_frequency / (timer_prescaler * TIMER_FREQUENCY));
 
   /* USER CODE END TIM3_Init 1 */
-  TIM_InitStruct.Prescaler = (timer_prescaler - 1);
-  TIM_InitStruct.CounterMode = LL_TIM_COUNTERMODE_UP;
-  TIM_InitStruct.Autoreload = (timer_reload - 1);
-  TIM_InitStruct.ClockDivision = LL_TIM_CLOCKDIVISION_DIV1;
-  LL_TIM_Init(TIM3, &TIM_InitStruct);
-  LL_TIM_DisableARRPreload(TIM3);
-  LL_TIM_SetTriggerInput(TIM3, LL_TIM_TS_ITR0);
-  LL_TIM_SetSlaveMode(TIM3, LL_TIM_SLAVEMODE_DISABLED);
-  LL_TIM_DisableIT_TRIG(TIM3);
-  LL_TIM_DisableDMAReq_TRIG(TIM3);
-  LL_TIM_SetTriggerOutput(TIM3, LL_TIM_TRGO_UPDATE);
-  LL_TIM_DisableMasterSlaveMode(TIM3);
+  trace("pre", timer_prescaler - 1);
+  trace("rel", timer_reload - 1);
+  //TIM_InitStruct.Prescaler = (timer_prescaler - 1);
+  //TIM_InitStruct.CounterMode = LL_TIM_COUNTERMODE_UP;
+  //TIM_InitStruct.Autoreload = (timer_reload - 1);
+  //TIM_InitStruct.ClockDivision = LL_TIM_CLOCKDIVISION_DIV1;
+//  LL_TIM_Init(TIM3, &TIM_InitStruct);
+//  LL_TIM_DisableARRPreload(TIM3);
+//  LL_TIM_SetTriggerInput(TIM3, LL_TIM_TS_ITR0);
+//  LL_TIM_SetSlaveMode(TIM3, LL_TIM_SLAVEMODE_DISABLED);
+//  LL_TIM_DisableIT_TRIG(TIM3);
+//  LL_TIM_DisableDMAReq_TRIG(TIM3);
+//  LL_TIM_SetTriggerOutput(TIM3, LL_TIM_TRGO_UPDATE);
+//  LL_TIM_DisableMasterSlaveMode(TIM3);
   /* USER CODE BEGIN TIM3_Init 2 */
   /* Set timer the trigger output (TRGO) */
-  LL_TIM_SetTriggerOutput(TIM3, LL_TIM_TRGO_UPDATE);  
+//  LL_TIM_SetTriggerOutput(TIM3, LL_TIM_TRGO_UPDATE);  
   /* Enable counter */
-  LL_TIM_EnableCounter(TIM3);
+//  LL_TIM_EnableCounter(TIM3);
   /* USER CODE END TIM3_Init 2 */
 
 }
@@ -462,12 +463,12 @@ static void MX_DMA_Init(void)
 {
   /* Init with LL driver */
   /* DMA controller clock enable */
-  LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_DMA1);
+  //LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_DMA1);
 
   /* DMA interrupt init */
   /* DMA1_Channel1_IRQn interrupt configuration */
-  NVIC_SetPriority(DMA1_Channel1_IRQn, 1);
-  NVIC_EnableIRQ(DMA1_Channel1_IRQn);
+  //NVIC_SetPriority(DMA1_Channel1_IRQn, 1);
+  //NVIC_EnableIRQ(DMA1_Channel1_IRQn);
 
 }
 
@@ -515,10 +516,10 @@ static void MX_GPIO_Init(void)
   */
 void Activate_ADC(void)
 {
-  __IO uint32_t wait_loop_index = 0U;
-  __IO uint32_t backup_setting_adc_dma_transfer = 0U;
+  //__IO uint32_t wait_loop_index = 0U;
+  //__IO uint32_t backup_setting_adc_dma_transfer = 0U;
   #if (USE_TIMEOUT == 1)
-  uint32_t Timeout = 0U; /* Variable used for timeout management */
+  //uint32_t Timeout = 0U; /* Variable used for timeout management */
   #endif /* USE_TIMEOUT */
   
   /*## Operation on ADC hierarchical scope: ADC instance #####################*/
@@ -537,7 +538,7 @@ void Activate_ADC(void)
   if (LL_ADC_IsEnabled(ADC1) == 0)
   {
     /* Enable ADC internal voltage regulator */
-    LL_ADC_EnableInternalRegulator(ADC1);
+    //LL_ADC_EnableInternalRegulator(ADC1);
     
     /* Delay for ADC internal voltage regulator stabilization.                */
     /* Compute number of CPU cycles to wait for, from delay in us.            */
@@ -545,11 +546,13 @@ void Activate_ADC(void)
     /*       CPU processing cycles (depends on compilation optimization).     */
     /* Note: If system core clock frequency is below 200kHz, wait time        */
     /*       is only a few CPU processing cycles.                             */
+      /*
     wait_loop_index = ((LL_ADC_DELAY_INTERNAL_REGUL_STAB_US * (SystemCoreClock / (100000 * 2))) / 10);
     while(wait_loop_index != 0)
     {
       wait_loop_index--;
     }
+    */
     
     /* Disable ADC DMA transfer request during calibration */
     /* Note: Specificity of this STM32 serie: Calibration factor is           */
@@ -557,66 +560,67 @@ void Activate_ADC(void)
     /*       To not insert ADC calibration factor among ADC conversion data   */
     /*       in DMA destination address, DMA transfer must be disabled during */
     /*       calibration.                                                     */
-    backup_setting_adc_dma_transfer = LL_ADC_REG_GetDMATransfer(ADC1);
-    LL_ADC_REG_SetDMATransfer(ADC1, LL_ADC_REG_DMA_TRANSFER_NONE);
+    //backup_setting_adc_dma_transfer = LL_ADC_REG_GetDMATransfer(ADC1);
+    //LL_ADC_REG_SetDMATransfer(ADC1, LL_ADC_REG_DMA_TRANSFER_NONE);
     
     /* Run ADC self calibration */
-    LL_ADC_StartCalibration(ADC1);
+    //LL_ADC_StartCalibration(ADC1);
     
     /* Poll for ADC effectively calibrated */
     #if (USE_TIMEOUT == 1)
-    Timeout = ADC_CALIBRATION_TIMEOUT_MS;
+    //Timeout = ADC_CALIBRATION_TIMEOUT_MS;
     #endif /* USE_TIMEOUT */
     
-    while (LL_ADC_IsCalibrationOnGoing(ADC1) != 0)
-    {
+    //while (LL_ADC_IsCalibrationOnGoing(ADC1) != 0)
+   // {
     #if (USE_TIMEOUT == 1)
       /* Check Systick counter flag to decrement the time-out value */
-      if (LL_SYSTICK_IsActiveCounterFlag())
-      {
-        if(Timeout-- == 0)
-        {
+    //  if (LL_SYSTICK_IsActiveCounterFlag())
+     // {
+      //  if(Timeout-- == 0)
+       // {
         /* Time-out occurred. Set LED to blinking mode */
-        LED_Blinking(LED_BLINK_ERROR);
-        }
-      }
+       // LED_Blinking(LED_BLINK_ERROR);
+       // }
+     // }
     #endif /* USE_TIMEOUT */
-    }
+   // }
     
     /* Restore ADC DMA transfer request after calibration */
-    LL_ADC_REG_SetDMATransfer(ADC1, backup_setting_adc_dma_transfer);
+    //LL_ADC_REG_SetDMATransfer(ADC1, backup_setting_adc_dma_transfer);
     
     /* Delay between ADC end of calibration and ADC enable.                   */
     /* Note: Variable divided by 2 to compensate partially                    */
     /*       CPU processing cycles (depends on compilation optimization).     */
+      /*
     wait_loop_index = (ADC_DELAY_CALIB_ENABLE_CPU_CYCLES >> 1);
     while(wait_loop_index != 0)
     {
       wait_loop_index--;
     }
-    
+   */ 
     /* Enable ADC */
-    LL_ADC_Enable(ADC1);
+    //LL_ADC_Enable(ADC1);
     
     /* Poll for ADC ready to convert */
     #if (USE_TIMEOUT == 1)
-    Timeout = ADC_ENABLE_TIMEOUT_MS;
+    //Timeout = ADC_ENABLE_TIMEOUT_MS;
     #endif /* USE_TIMEOUT */
     
-    while (LL_ADC_IsActiveFlag_ADRDY(ADC1) == 0)
-    {
+    //while (LL_ADC_IsActiveFlag_ADRDY(ADC1) == 0)
+    //{
     #if (USE_TIMEOUT == 1)
       /* Check Systick counter flag to decrement the time-out value */
-      if (LL_SYSTICK_IsActiveCounterFlag())
-      {
-        if(Timeout-- == 0)
+      //if (LL_SYSTICK_IsActiveCounterFlag())
+      //{
+        //if(Timeout-- == 0)
         {
         /* Time-out occurred. Set LED to blinking mode */
-        LED_Blinking(LED_BLINK_ERROR);
-        }
-      }
+        //LED_Blinking(LED_BLINK_ERROR);
+        //}
+      //}
     #endif /* USE_TIMEOUT */
-    }
+    //}
     
     /* Note: ADC flag ADRDY is not cleared here to be able to check ADC       */
     /*       status afterwards.                                               */
