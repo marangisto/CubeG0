@@ -26,6 +26,11 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+extern void aux_main();
+extern void write_probe(uint8_t x);
+extern void trace(const char *s, uint32_t x);
+extern void init_i2c2();
+extern void write_i2c2(uint8_t addr, const uint8_t *buf, uint8_t nbytes);
 
 /* USER CODE END Includes */
 
@@ -81,14 +86,12 @@ uint8_t      *pTransmitBuffer    = (uint8_t *)aLedOn;
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_I2C1_Init(void);
-static void MX_I2C2_Init(void);
 /* USER CODE BEGIN PFP */
 uint8_t  Buffercmp8(uint8_t *pBuffer1, uint8_t *pBuffer2, uint8_t BufferLength);
 void     LED_On(void);
 void     LED_Off(void);
 void     LED_Blinking(uint32_t Period);
 void     WaitForUserButtonPress(void);
-void     Handle_I2C_Master(void);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -122,6 +125,7 @@ int main(void)
 
   /* Configure the system clock */
   SystemClock_Config();
+    aux_main();
 
   /* USER CODE BEGIN SysInit */
 
@@ -130,7 +134,7 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_I2C1_Init();
-  MX_I2C2_Init();
+   init_i2c2();
   /* USER CODE BEGIN 2 */
   /* Set LED4 Off */
   LED_Off();
@@ -139,7 +143,8 @@ int main(void)
   WaitForUserButtonPress();
 
   /* Handle I2C2 events (Master) */
-  Handle_I2C_Master();
+    write_i2c2(SLAVE_OWN_ADDRESS, pTransmitBuffer, ubNbDataToTransmit);
+    trace("CR2", I2C2->CR2);
 
   /* USER CODE END 2 */
 
@@ -269,70 +274,6 @@ static void MX_I2C1_Init(void)
   LL_I2C_EnableIT_ERR(I2C1);
   LL_I2C_EnableIT_STOP(I2C1);
   /* USER CODE END I2C1_Init 2 */
-
-}
-
-/**
-  * @brief I2C2 Initialization Function
-  * @param None
-  * @retval None
-  */
-static void MX_I2C2_Init(void)
-{
-
-  /* USER CODE BEGIN I2C2_Init 0 */
-
-  /* USER CODE END I2C2_Init 0 */
-
-  LL_I2C_InitTypeDef I2C_InitStruct = {0};
-
-  LL_GPIO_InitTypeDef GPIO_InitStruct = {0};
-
-  LL_IOP_GRP1_EnableClock(LL_IOP_GRP1_PERIPH_GPIOB);
-  /**I2C2 GPIO Configuration  
-  PB13   ------> I2C2_SCL
-  PB14   ------> I2C2_SDA 
-  */
-  GPIO_InitStruct.Pin = LL_GPIO_PIN_13;
-  GPIO_InitStruct.Mode = LL_GPIO_MODE_ALTERNATE;
-  GPIO_InitStruct.Speed = LL_GPIO_SPEED_FREQ_HIGH;
-  GPIO_InitStruct.OutputType = LL_GPIO_OUTPUT_OPENDRAIN;
-  GPIO_InitStruct.Pull = LL_GPIO_PULL_UP;
-  GPIO_InitStruct.Alternate = LL_GPIO_AF_6;
-  LL_GPIO_Init(GPIOB, &GPIO_InitStruct);
-
-  GPIO_InitStruct.Pin = LL_GPIO_PIN_14;
-  GPIO_InitStruct.Mode = LL_GPIO_MODE_ALTERNATE;
-  GPIO_InitStruct.Speed = LL_GPIO_SPEED_FREQ_HIGH;
-  GPIO_InitStruct.OutputType = LL_GPIO_OUTPUT_OPENDRAIN;
-  GPIO_InitStruct.Pull = LL_GPIO_PULL_UP;
-  GPIO_InitStruct.Alternate = LL_GPIO_AF_6;
-  LL_GPIO_Init(GPIOB, &GPIO_InitStruct);
-
-  /* Peripheral clock enable */
-  LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_I2C2);
-
-  /* USER CODE BEGIN I2C2_Init 1 */
-
-  /* USER CODE END I2C2_Init 1 */
-  /** I2C Initialization 
-  */
-  I2C_InitStruct.PeripheralMode = LL_I2C_MODE_I2C;
-  I2C_InitStruct.Timing = 0x00F02B86;
-  I2C_InitStruct.AnalogFilter = LL_I2C_ANALOGFILTER_ENABLE;
-  I2C_InitStruct.DigitalFilter = 0;
-  I2C_InitStruct.OwnAddress1 = 0;
-  I2C_InitStruct.TypeAcknowledge = LL_I2C_ACK;
-  I2C_InitStruct.OwnAddrSize = LL_I2C_OWNADDRESS1_7BIT;
-  LL_I2C_Init(I2C2, &I2C_InitStruct);
-  LL_I2C_EnableAutoEndMode(I2C2);
-  LL_I2C_SetOwnAddress2(I2C2, 0, LL_I2C_OWNADDRESS2_NOMASK);
-  LL_I2C_DisableOwnAddress2(I2C2);
-  LL_I2C_DisableGeneralCall(I2C2);
-  LL_I2C_EnableClockStretching(I2C2);
-  /* USER CODE BEGIN I2C2_Init 2 */
-
-  /* USER CODE END I2C2_Init 2 */
 
 }
 
@@ -468,67 +409,6 @@ void WaitForUserButtonPress(void)
   }
   /* Turn LED4 off */
   LL_GPIO_ResetOutputPin(LED4_GPIO_Port, LED4_Pin);
-}
-
-/**
-  * @brief  This Function handle Master events to perform a transmission process
-  * @note  This function is composed in different steps :
-  *        -1- Initiate a Start condition to the Slave device
-  *        -2- Loop until end of transfer received (STOP flag raised)
-  *             -2.1- Transmit data (TXIS flag raised)
-  *        -3- Clear pending flags, Data consistency are checking into Slave process
-  * @param  None
-  * @retval None
-  */
-void Handle_I2C_Master(void)
-{
-  /* (1) Initiate a Start condition to the Slave device ***********************/
-
-  /* Master Generate Start condition for a write request :              */
-  /*    - to the Slave with a 7-Bit SLAVE_OWN_ADDRESS                   */
-  /*    - with a auto stop condition generation when transmit all bytes */
-  LL_I2C_HandleTransfer(I2C2, SLAVE_OWN_ADDRESS, LL_I2C_ADDRSLAVE_7BIT, ubNbDataToTransmit, LL_I2C_MODE_AUTOEND, LL_I2C_GENERATE_START_WRITE);
-
-  /* (2) Loop until end of transfer received (STOP flag raised) ***************/
-
-#if (USE_TIMEOUT == 1)
-  Timeout = I2C_SEND_TIMEOUT_TXIS_MS;
-#endif /* USE_TIMEOUT */
-
-  /* Loop until STOP flag is raised  */
-  while (!LL_I2C_IsActiveFlag_STOP(I2C2))
-  {
-    /* (2.1) Transmit data (TXIS flag raised) *********************************/
-
-    /* Check TXIS flag value in ISR register */
-    if (LL_I2C_IsActiveFlag_TXIS(I2C2))
-    {
-      /* Write data in Transmit Data register.
-      TXIS flag is cleared by writing data in TXDR register */
-      LL_I2C_TransmitData8(I2C2, (*pTransmitBuffer++));
-
-#if (USE_TIMEOUT == 1)
-      Timeout = I2C_SEND_TIMEOUT_TXIS_MS;
-#endif /* USE_TIMEOUT */
-    }
-
-#if (USE_TIMEOUT == 1)
-    /* Check Systick counter flag to decrement the time-out value */
-    if (LL_SYSTICK_IsActiveCounterFlag())
-    {
-      if (Timeout-- == 0)
-      {
-        /* Time-out occurred. Set LED4 to blinking mode */
-        LED_Blinking(LED_BLINK_SLOW);
-      }
-    }
-#endif /* USE_TIMEOUT */
-  }
-
-  /* (3) Clear pending flags, Data consistency are checking into Slave process */
-
-  /* End of I2C_SlaveReceiver_MasterTransmitter Process */
-  LL_I2C_ClearFlag_STOP(I2C2);
 }
 
 /******************************************************************************/
