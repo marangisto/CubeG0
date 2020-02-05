@@ -168,8 +168,10 @@ void EXTI4_15_IRQHandler(void)
 /**
   * @brief This function handles I2C1 event global interrupt / I2C1 wake-up interrupt through EXTI line 23.
   */
+extern void write_probe(uint8_t x);
 void I2C1_IRQHandler(void)
 {
+  write_probe(1);
   /* USER CODE BEGIN I2C1_IRQn 0 */
   /* Check ADDR flag value in ISR register */
 if (LL_I2C_IsActiveFlag_ADDR(I2C1))

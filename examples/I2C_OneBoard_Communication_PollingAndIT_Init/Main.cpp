@@ -12,6 +12,7 @@ using namespace hal::i2c;
 
 typedef usart_t<2, PA2, PA3> serial;
 typedef output_t<PD9> probe;
+typedef i2c_t<1, PB8, PB9> i2c1;
 typedef i2c_t<2, PB13, PB14> i2c2;
 
 extern "C" void aux_main()
@@ -31,6 +32,13 @@ extern "C" void write_probe(uint8_t x)
 extern "C" void trace(const char *s, uint32_t x)
 {
     printf("%s = %lx\n", s, x);
+}
+
+extern "C" void init_i2c1()
+{
+    i2c1::setup();
+    i2c1::own_address(90);
+    hal::nvic<interrupt::I2C1>::enable();
 }
 
 extern "C" void init_i2c2()
