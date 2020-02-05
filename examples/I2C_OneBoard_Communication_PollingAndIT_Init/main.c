@@ -143,6 +143,7 @@ int main(void)
   WaitForUserButtonPress();
 
   /* Handle I2C2 events (Master) */
+    trace("CR2", I2C2->CR2);
     write_i2c2(SLAVE_OWN_ADDRESS, pTransmitBuffer, ubNbDataToTransmit);
     trace("CR2", I2C2->CR2);
 
@@ -436,6 +437,7 @@ void Slave_Reception_Callback(void)
   /* Read character in Receive Data register.
   RXNE flag is cleared by reading data in RXDR register */
   aReceiveBuffer[ubReceiveIndex++] = LL_I2C_ReceiveData8(I2C1);
+  write_probe(ubReceiveIndex & 1);
 }
 
 /**

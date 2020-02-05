@@ -11,13 +11,13 @@ using namespace hal::usart;
 using namespace hal::i2c;
 
 typedef usart_t<2, PA2, PA3> serial;
-typedef output_t<PA10> probe;
+typedef output_t<PD9> probe;
 typedef i2c_t<2, PB13, PB14> i2c2;
 
 extern "C" void aux_main()
 {
     sys_clock::copy_system_core_clock();
-    serial::setup<230400>();
+    serial::setup<115200>();
     stdio_t::bind<serial>();
     probe::setup();
     printf("Welcome to the STM32G431!\n");
@@ -42,3 +42,4 @@ extern "C" void write_i2c2(uint8_t addr, const uint8_t *buf, uint8_t nbytes)
 {
     i2c2::write(addr, buf, nbytes);
 }
+
