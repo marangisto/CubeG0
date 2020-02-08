@@ -38,6 +38,7 @@ extern "C" void init_i2c1()
 {
     i2c1::setup();
     i2c1::own_address(90);
+    i2c1::enable_interrupt(i2c_error | i2c_nack_received | i2c_address_match | i2c_stop_detection);
     hal::nvic<interrupt::I2C1>::enable();
 }
 

@@ -86,7 +86,6 @@ uint8_t      *pTransmitBuffer    = (uint8_t *)aLedOn;
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
-static void MX_I2C1_Init(void);
 /* USER CODE BEGIN PFP */
 uint8_t  Buffercmp8(uint8_t *pBuffer1, uint8_t *pBuffer2, uint8_t BufferLength);
 void     LED_On(void);
@@ -135,7 +134,6 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
    init_i2c1();
-  MX_I2C1_Init();
    init_i2c2();
   /* USER CODE BEGIN 2 */
   /* Set LED4 Off */
@@ -202,26 +200,6 @@ void SystemClock_Config(void)
   LL_SetSystemCoreClock(56000000);
 }
 
-/**
-  * @brief I2C1 Initialization Function
-  * @param None
-  * @retval None
-  */
-static void MX_I2C1_Init(void)
-{
-  /* Enable I2C1 address match/error interrupts:
-  *  - Enable Address Match Interrupt
-  *  - Enable Not acknowledge received interrupt
-  *  - Enable Error interrupts
-  *  - Enable Stop interrupt
-  */
-  LL_I2C_EnableIT_ADDR(I2C1);
-  LL_I2C_EnableIT_NACK(I2C1);
-  LL_I2C_EnableIT_ERR(I2C1);
-  LL_I2C_EnableIT_STOP(I2C1);
-  /* USER CODE END I2C1_Init 2 */
-
-}
 
 /**
   * @brief GPIO Initialization Function
