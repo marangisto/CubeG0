@@ -22,6 +22,14 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 
+void aux_main();
+void toggle_probe();
+void write_probe(uint8_t x);
+void trace(const char *s, uint32_t x);
+void init_i2c1();
+void init_i2c2();
+void write_i2c2(uint8_t addr, const uint8_t *buf, uint8_t nbytes);
+
 /** @addtogroup STM32G0xx_LL_Examples
   * @{
   */
@@ -82,6 +90,8 @@ int main(void)
 {
   /* Configure the system clock to 56 MHz */
   SystemClock_Config();
+
+  aux_main();
 
   /* Initialize LED4 */
   LED_Init();
@@ -569,6 +579,7 @@ void UserButton_Callback(void)
   */
 void Slave_Ready_To_Transmit_Callback(void)
 {
+    toggle_probe();
   /* Send the Byte requested by the Master */
   LL_I2C_TransmitData8(I2C1, SLAVE_BYTE_TO_SEND);
 }
@@ -581,8 +592,10 @@ void Slave_Ready_To_Transmit_Callback(void)
   */
 void Master_Reception_Callback(void)
 {
+    toggle_probe();
   /* Read character in Receive Data register.
   RXNE flag is cleared by reading data in RXDR register */
+
   aReceiveBuffer[ubReceiveIndex++] = LL_I2C_ReceiveData8(I2C2);
 }
 
@@ -595,6 +608,7 @@ void Master_Reception_Callback(void)
   */
 void Master_Complete_Callback(void)
 {
+    toggle_probe();
   /* Read Received character.
   RXNE flag is cleared by reading of RXDR register */
   if(aReceiveBuffer[ubReceiveIndex-1] == SLAVE_BYTE_TO_SEND)
