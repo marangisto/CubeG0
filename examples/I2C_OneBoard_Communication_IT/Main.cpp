@@ -61,3 +61,8 @@ extern "C" void write_i2c2(uint8_t addr, const uint8_t *buf, uint8_t nbytes)
     i2c2::write(addr, buf, nbytes);
 }
 
+extern "C" void read_i2c2(uint8_t addr, uint8_t *buf, uint8_t nbytes)
+{
+    i2c2::read(addr, buf, nbytes);
+}
+

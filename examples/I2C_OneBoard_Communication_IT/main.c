@@ -29,6 +29,7 @@ void trace(const char *s, uint32_t x);
 void init_i2c1();
 void init_i2c2();
 void write_i2c2(uint8_t addr, const uint8_t *buf, uint8_t nbytes);
+void read_i2c2(uint8_t addr, uint8_t *buf, uint8_t nbytes);
 
 /** @addtogroup STM32G0xx_LL_Examples
   * @{
@@ -104,17 +105,24 @@ int main(void)
     init_i2c2();
 
   NVIC_EnableIRQ(I2C2_IRQn);
+  /*
   LL_I2C_EnableIT_RX(I2C2);
   LL_I2C_EnableIT_NACK(I2C2);
   LL_I2C_EnableIT_ERR(I2C2);
   LL_I2C_EnableIT_STOP(I2C2);
+  */
 
   /* Wait for User push-button press to start transfer */
   WaitForUserButtonPress();
 
   /* Handle I2C2 events (Master) */
-  Handle_I2C_Master();
+  //LL_I2C_HandleTransfer(I2C2, SLAVE_OWN_ADDRESS, LL_I2C_ADDRSLAVE_7BIT, 1, LL_I2C_MODE_AUTOEND, LL_I2C_GENERATE_START_READ);
 
+  static uint8_t buf[32], len = 1;
+
+    read_i2c2(SLAVE_OWN_ADDRESS, buf, len);
+
+    trace("buf[0]", buf[0]);
   /* Infinite loop */
   while (1)
   {
@@ -243,7 +251,6 @@ void Handle_I2C_Master(void)
    *  - to the Slave with a 7-Bit SLAVE_OWN_ADDRESS
    *  - with a auto stop condition generation when receive 1 byte
    */
-  LL_I2C_HandleTransfer(I2C2, SLAVE_OWN_ADDRESS, LL_I2C_ADDRSLAVE_7BIT, 1, LL_I2C_MODE_AUTOEND, LL_I2C_GENERATE_START_READ);
 }
 
 /**
@@ -327,7 +334,7 @@ void Slave_Ready_To_Transmit_Callback(void)
 {
     toggle_probe();
   /* Send the Byte requested by the Master */
-  LL_I2C_TransmitData8(I2C1, SLAVE_BYTE_TO_SEND);
+  LL_I2C_TransmitData8(I2C1, 0x17);
 }
 
 /**
