@@ -12,8 +12,15 @@ using namespace hal::i2c;
 
 typedef usart_t<2, PA2, PA3> serial;
 typedef output_t<PD9> probe;
-typedef i2c_t<1, PB8, PB9> i2c1;
-typedef i2c_t<2, PB13, PB14> i2c2;
+typedef i2c_slave_t<1, PB8, PB9> i2c1;
+typedef i2c_master_t<2, PB13, PB14> i2c2;
+
+static uint8_t buf[128];
+
+static uint8_t callback(uint8_t len)
+{
+    return 0;
+}
 
 extern "C" void aux_main()
 {
@@ -36,9 +43,7 @@ extern "C" void trace(const char *s, uint32_t x)
 
 extern "C" void init_i2c1()
 {
-    i2c1::setup();
-    i2c1::own_address(90);
-    i2c1::enable_interrupt(i2c_error | i2c_nack_received | i2c_address_match | i2c_stop_detection);
+    i2c1::setup(90, callback, buf, sizeof(buf));
     hal::nvic<interrupt::I2C1>::enable();
 }
 
