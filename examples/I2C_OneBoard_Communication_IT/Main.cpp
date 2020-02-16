@@ -17,8 +17,9 @@ typedef i2c_master_t<2, PB13, PB14> i2c2;
 
 static uint8_t buf[128];
 
-static void callback(uint8_t *buf, uint8_t len)
+static uint8_t callback(uint8_t len)
 {
+    return 0;
 }
 
 extern "C" void aux_main()

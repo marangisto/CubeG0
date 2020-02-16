@@ -345,7 +345,7 @@ void Slave_Ready_To_Transmit_Callback(void)
   */
 void Master_Reception_Callback(void)
 {
-    toggle_probe();
+    //toggle_probe();
   /* Read character in Receive Data register.
   RXNE flag is cleared by reading data in RXDR register */
 
@@ -361,7 +361,7 @@ void Master_Reception_Callback(void)
   */
 void Master_Complete_Callback(void)
 {
-    toggle_probe();
+    //toggle_probe();
   /* Read Received character.
   RXNE flag is cleared by reading of RXDR register */
   if(aReceiveBuffer[ubReceiveIndex-1] == SLAVE_BYTE_TO_SEND)
